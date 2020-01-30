@@ -1,2 +1,2 @@
 # cyclonedx-go
-CycloneDX implementation for Go (Modules)
+[CycloneDX](https://cyclonedx.org) implementation for Go (Modules)
