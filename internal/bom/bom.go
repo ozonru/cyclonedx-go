@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"io"
+	"strings"
 	"encoding/xml"
 	"github.com/google/uuid"
 )
@@ -22,6 +23,10 @@ type Module struct {
 	main bool `json:"Main"`
 	Version string `json:"Version"xml:"version"`
 	indirect bool `json:"Indirect"`
+}
+
+func (m Module) NormalizeVersion(v string) string {
+	return strings.TrimPrefix(v, "v")
 }
 
 // TODO See https://cyclonedx.org/docs/1.1/
@@ -57,6 +62,7 @@ func Generate() (string, error) {
 			log.Fatalf("reading go list output: %v", err)
 		}
 		m.Type = "library"
+		m.Version = m.NormalizeVersion(m.Version)
 		modules = append(modules, m)
 	}
 	bom.Modules = modules
