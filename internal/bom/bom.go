@@ -11,39 +11,39 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO
-// Required fields by spec:
-// - type
-// - name
-// - version
 type Module struct {
+	Path string `json:"Path"`
+	Main bool `json:"Main"`
+	Version string `json:"Version"`
+	Indirect bool `json:"Indirect"`
+}
+
+type Component struct {
 	XMLName xml.Name `xml:"component"`
 	Type string `xml:"type,attr"`
-	Path string `json:"Path"xml:"name"`
-	main bool `json:"Main"`
-	Version string `json:"Version"xml:"version"`
-	indirect bool `json:"Indirect"`
+	Name string `xml:"name"`
+	Version string `xml:"version"`
 }
 
 func (m Module) NormalizeVersion(v string) string {
 	return strings.TrimPrefix(v, "v")
 }
 
-// TODO See https://cyclonedx.org/docs/1.1/
+// See https://cyclonedx.org/docs/1.1/
 type BOM struct {
 	XMLName xml.Name `xml:"bom"`
 	XMLNs string `xml:"xmlns,attr"`
 	Version int `xml:"version,attr"`
 	SerialNumber string `xml:"serialNumber,attr"`
-	Modules []Module `xml:"components>component"`
+	Components []Component `xml:"components>component"`
 }
 
-// TODO
-// (!) Semver conversion https://semver.org/#is-v123-a-semantic-version
 func Generate() (string, error) {
 	var result string
+
 	cmd := exec.Command("go", "list", "-json", "-m", "all")
 	out, err := cmd.Output()
+
 	if err != nil {
 		panic(err)
 	}
@@ -51,21 +51,25 @@ func Generate() (string, error) {
 	bom := BOM{XMLNs:"http://cyclonedx.org/schema/bom/1.1", Version:1}
 	bom.SerialNumber = uuid.New().URN()
 	dec := json.NewDecoder(bytes.NewReader(out))
-	var modules []Module
+	var components []Component
 
 	for {
 		var m Module
+		var c Component
 		if err := dec.Decode(&m); err != nil {
 			if err == io.EOF {
 				break
 			}
 			log.Fatalf("reading go list output: %v", err)
 		}
-		m.Type = "library"
-		m.Version = m.NormalizeVersion(m.Version)
-		modules = append(modules, m)
+		if m.Main != true {
+			c.Name = m.Path
+			c.Type = "library"
+			c.Version = m.NormalizeVersion(m.Version)
+			components = append(components, c)
+		}
 	}
-	bom.Modules = modules
+	bom.Components = components
 	xmlOut, err := xml.MarshalIndent(bom, " ", "  ")
 	if err != nil {
 		panic(err)
