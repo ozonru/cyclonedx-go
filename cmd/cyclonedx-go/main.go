@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"github.com/ozonru/cyclonedx-go/internal/app"
+	"github.com/ozonru/cyclonedx-go/internal/bom"
+	"io/ioutil"
 )
 
 func checkError(e error) {
@@ -20,17 +21,19 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Generate software bill-of-material (SBOM) file for Go project.\n\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of program:\n")
 		flag.PrintDefaults()
-		fmt.Fprintf(flag.CommandLine.Output(), "\nFields marked with (*) are required.\n")
 	}
 
 	// TODO
 	// 1. Check if Go binary is installed and its version
 	// 2. Check for go.mod
-	// 3. Get result and print or write it to the file
-
-	flag.StringVar(&outputFileName, "o", "bom.xml", "Result SBOM file")
+	flag.StringVar(&outputFileName, "o", "", "Result SBOM file")
 	flag.Parse()
-	result, err := app.Generate(outputFileName)
+	result, err := bom.Generate()
 	checkError(err)
-	fmt.Println(result)
+	if outputFileName != "" {
+		err := ioutil.WriteFile(outputFileName, []byte(result), 0644)
+		checkError(err)
+	} else {
+		fmt.Println(result)
+	}
 }

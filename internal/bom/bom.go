@@ -1,4 +1,4 @@
-package app
+package bom
 
 import (
 	"os/exec"
@@ -7,8 +7,14 @@ import (
 	"log"
 	"io"
 	"encoding/xml"
+	"github.com/google/uuid"
 )
 
+// TODO
+// Required fields by spec:
+// - type
+// - name
+// - version
 type Module struct {
 	XMLName xml.Name `xml:"component"`
 	Type string `xml:"type,attr"`
@@ -19,13 +25,17 @@ type Module struct {
 }
 
 // TODO See https://cyclonedx.org/docs/1.1/
-// <bom xmlns="http://cyclonedx.org/schema/bom/1.1" version="1" serialNumber="urn:uuid:deb8e876-42f7-4218-9661-db195cece217">
 type BOM struct {
 	XMLName xml.Name `xml:"bom"`
+	XMLNs string `xml:"xmlns,attr"`
+	Version int `xml:"version,attr"`
+	SerialNumber string `xml:"serialNumber,attr"`
 	Modules []Module `xml:"components>component"`
 }
 
-func Generate(outputFileName string) (string, error) {
+// TODO
+// (!) Semver conversion https://semver.org/#is-v123-a-semantic-version
+func Generate() (string, error) {
 	var result string
 	cmd := exec.Command("go", "list", "-json", "-m", "all")
 	out, err := cmd.Output()
@@ -33,7 +43,8 @@ func Generate(outputFileName string) (string, error) {
 		panic(err)
 	}
 
-	bom := BOM{}
+	bom := BOM{XMLNs:"http://cyclonedx.org/schema/bom/1.1", Version:1}
+	bom.SerialNumber = uuid.New().URN()
 	dec := json.NewDecoder(bytes.NewReader(out))
 	var modules []Module
 
