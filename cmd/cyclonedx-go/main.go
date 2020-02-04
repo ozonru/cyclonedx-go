@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"os"
 	"github.com/ozonru/cyclonedx-go/internal/bom"
 	"io/ioutil"
+	"log"
+	"os"
 )
 
 func checkError(e error) {
@@ -24,13 +24,11 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	// TODO
-	// 1. Check if Go binary is installed and its version
 	flag.StringVar(&outputFileName, "o", "", "Result SBOM file")
 	flag.Parse()
 
 	if _, err := os.Stat("go.mod"); os.IsNotExist(err) {
-		fmt.Println("Can't find go.mod file in the current working directory.");
+		fmt.Println("Can't find go.mod file in the current working directory.")
 		os.Exit(1)
 	}
 

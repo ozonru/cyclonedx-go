@@ -1,28 +1,27 @@
 package bom
 
 import (
-	"os/exec"
 	"bytes"
 	"encoding/json"
-	"log"
-	"io"
-	"strings"
 	"encoding/xml"
 	"github.com/google/uuid"
+	"io"
+	"os/exec"
+	"strings"
 )
 
 type Module struct {
-	Path string `json:"Path"`
-	Main bool `json:"Main"`
-	Version string `json:"Version"`
-	Indirect bool `json:"Indirect"`
+	Path     string `json:"Path"`
+	Main     bool   `json:"Main"`
+	Version  string `json:"Version"`
+	Indirect bool   `json:"Indirect"`
 }
 
 type Component struct {
 	XMLName xml.Name `xml:"component"`
-	Type string `xml:"type,attr"`
-	Name string `xml:"name"`
-	Version string `xml:"version"`
+	Type    string   `xml:"type,attr"`
+	Name    string   `xml:"name"`
+	Version string   `xml:"version"`
 }
 
 func (m Module) NormalizeVersion(v string) string {
@@ -31,11 +30,11 @@ func (m Module) NormalizeVersion(v string) string {
 
 // See https://cyclonedx.org/docs/1.1/
 type BOM struct {
-	XMLName xml.Name `xml:"bom"`
-	XMLNs string `xml:"xmlns,attr"`
-	Version int `xml:"version,attr"`
-	SerialNumber string `xml:"serialNumber,attr"`
-	Components []Component `xml:"components>component"`
+	XMLName      xml.Name    `xml:"bom"`
+	XMLNs        string      `xml:"xmlns,attr"`
+	Version      int         `xml:"version,attr"`
+	SerialNumber string      `xml:"serialNumber,attr"`
+	Components   []Component `xml:"components>component"`
 }
 
 func Generate() (string, error) {
@@ -45,10 +44,10 @@ func Generate() (string, error) {
 	out, err := cmd.Output()
 
 	if err != nil {
-		panic(err)
+		return result, err
 	}
 
-	bom := BOM{XMLNs:"http://cyclonedx.org/schema/bom/1.1", Version:1}
+	bom := BOM{XMLNs: "http://cyclonedx.org/schema/bom/1.1", Version: 1}
 	bom.SerialNumber = uuid.New().URN()
 	dec := json.NewDecoder(bytes.NewReader(out))
 	var components []Component
@@ -60,7 +59,7 @@ func Generate() (string, error) {
 			if err == io.EOF {
 				break
 			}
-			log.Fatalf("reading go list output: %v", err)
+			return result, err
 		}
 		if m.Main != true {
 			c.Name = m.Path
@@ -72,7 +71,7 @@ func Generate() (string, error) {
 	bom.Components = components
 	xmlOut, err := xml.MarshalIndent(bom, " ", "  ")
 	if err != nil {
-		panic(err)
+		return result, nil
 	}
 	result = xml.Header + string(xmlOut)
 	return result, nil
