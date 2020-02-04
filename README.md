@@ -4,7 +4,8 @@ The CycloneDX module for Go creates a valid CycloneDX bill-of-material document 
 
 ## Requirements
 
-:warning: It works for projects with [Modules](https://blog.golang.org/using-go-modules) feauture enabled
+* Go >= 1.11
+* :warning: It works for projects with [Modules](https://blog.golang.org/using-go-modules) feauture enabled
 
 ## Install
 
