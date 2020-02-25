@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"github.com/google/uuid"
+	"github.com/package-url/packageurl-go"
 	"io"
 	"os/exec"
 	"strings"
@@ -22,10 +23,31 @@ type Component struct {
 	Type    string   `xml:"type,attr"`
 	Name    string   `xml:"name"`
 	Version string   `xml:"version"`
+	PURL    string   `xml:"purl"`
 }
 
 func (m Module) NormalizeVersion(v string) string {
 	return strings.TrimPrefix(v, "v")
+}
+
+func (m Module) PURL() string {
+	var ns, n string
+	n = m.Path
+	chunks := strings.Split(m.Path, "/")
+
+	if len(chunks) > 1 {
+		ns = strings.Join(chunks[:len(chunks)-1], "/")
+		n = chunks[len(chunks)-1]
+	}
+
+	p := packageurl.NewPackageURL(
+		packageurl.TypeGolang,
+		ns,
+		n,
+		m.NormalizeVersion(m.Version),
+		nil,
+		"")
+	return p.ToString()
 }
 
 // See https://cyclonedx.org/docs/1.1/
@@ -64,6 +86,7 @@ func Generate() (string, error) {
 		if m.Main != true {
 			c.Name = m.Path
 			c.Type = "library"
+			c.PURL = m.PURL()
 			c.Version = m.NormalizeVersion(m.Version)
 			components = append(components, c)
 		}
