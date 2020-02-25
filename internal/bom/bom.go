@@ -37,19 +37,11 @@ type BOM struct {
 	Components   []Component `xml:"components>component"`
 }
 
-func Generate() (string, error) {
+func GenerateFromJSON(j []byte) (string, error) {
 	var result string
-
-	cmd := exec.Command("go", "list", "-json", "-m", "all")
-	out, err := cmd.Output()
-
-	if err != nil {
-		return result, err
-	}
-
 	bom := BOM{XMLNs: "http://cyclonedx.org/schema/bom/1.1", Version: 1}
 	bom.SerialNumber = uuid.New().URN()
-	dec := json.NewDecoder(bytes.NewReader(out))
+	dec := json.NewDecoder(bytes.NewReader(j))
 	var components []Component
 
 	for {
@@ -75,4 +67,17 @@ func Generate() (string, error) {
 	}
 	result = xml.Header + string(xmlOut)
 	return result, nil
+}
+
+func Generate() (string, error) {
+	var result string
+
+	cmd := exec.Command("go", "list", "-json", "-m", "all")
+	out, err := cmd.Output()
+
+	if err != nil {
+		return result, err
+	}
+
+	return GenerateFromJSON(out)
 }
