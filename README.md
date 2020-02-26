@@ -23,12 +23,20 @@ Navigate to the project directory and run `cyclonedx-go`. Inside it will read ou
 
 ```bash
 $ cyclonedx-go 
+```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
- <bom xmlns="http://cyclonedx.org/schema/bom/1.1" version="1" serialNumber="urn:uuid:a83b2169-1ac1-4624-85ff-b5a4fa2fdd29">
+ <bom xmlns="http://cyclonedx.org/schema/bom/1.1" version="1" serialNumber="urn:uuid:3bb55f5c-80ca-49d7-a68f-0180345a7208">
    <components>
      <component type="library">
        <name>github.com/google/uuid</name>
        <version>1.1.1</version>
+       <purl>pkg:golang/github.com/google/uuid@1.1.1</purl>
+     </component>
+     <component type="library">
+       <name>github.com/package-url/packageurl-go</name>
+       <version>0.1.0</version>
+       <purl>pkg:golang/github.com/package-url/packageurl-go@0.1.0</purl>
      </component>
    </components>
  </bom>
